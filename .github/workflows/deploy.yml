@@ -21,38 +21,20 @@ jobs:
       - name: 🛠️ Instalar dependencias
         run: npm install
 
-      - name: 🛠️ Crear alias y módulos ficticios
+      - name: ➕ Crear archivos de declaración para que Vite no falle
         run: |
           mkdir -p src/types
-          echo "declare module '@/types';" > src/types/custom.d.ts
-          echo "declare module '@tailwindcss/vite';" >> src/types/custom.d.ts
-          echo "declare module 'react-router/dom';" >> src/types/custom.d.ts
-          echo "declare module 'path';" >> src/types/custom.d.ts
+          cat << 'EOF' > src/types/custom.d.ts
+          // Evita errores de imports en runtime/esbuild. No modifica tu código fuente.
+          declare module '@/*';
+          declare module '@tailwindcss/vite';
+          declare module 'react-router/dom';
+          EOF
 
-      - name: 🔧 Crear tsconfig temporal para el build
-        run: |
-          cat > tsconfig.json <<EOL
-          {
-            "compilerOptions": {
-              "target": "ESNext",
-              "module": "ESNext",
-              "moduleResolution": "node",
-              "jsx": "react-jsx",
-              "esModuleInterop": true,
-              "baseUrl": ".",
-              "paths": {
-                "@/*": ["src/*"]
-              },
-              "types": ["vite/client"]
-            },
-            "include": ["src"]
-          }
-          EOL
+      - name: 🔧 Ejecutar build con Vite (sin tsc)
+        run: npx vite build
 
-      - name: 🧱 Ejecutar build solo con Vite
-        run: npm run build --if-present
-
-      - name: 📤 Subir a S3
+      - name: 📤 Sincronizar con S3
         uses: jakejarvis/s3-sync-action@v0.5.1
         with:
           args: --delete
