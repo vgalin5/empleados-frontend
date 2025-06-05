@@ -13,10 +13,45 @@ jobs:
       - name: 📥 Clonar repositorio
         uses: actions/checkout@v3
 
-      - name: 🛠️ Instalar dependencias y construir proyecto
+      - name: 🟢 Configurar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: 🛠️ Instalar dependencias
+        run: npm install
+
+      - name: ➕ Crear declaración falsa para @tailwindcss/vite
         run: |
-          npm install
-          npm run build
+          mkdir -p src/types
+          echo "declare module '@tailwindcss/vite';" > src/types/tailwindcss-vite.d.ts
+
+      - name: ➕ Instalar tipos de Node.js
+        run: npm install --save-dev @types/node
+
+      - name: 🔧 Reescribir tsconfig.json
+        run: |
+          cat > tsconfig.json <<EOL
+          {
+            "compilerOptions": {
+              "target": "ESNext",
+              "module": "ESNext",
+              "moduleResolution": "node",
+              "esModuleInterop": true,
+              "strict": true,
+              "jsx": "react-jsx",
+              "types": ["vite/client", "node"],
+              "baseUrl": ".",
+              "paths": {
+                "@/*": ["src/*"]
+              }
+            },
+            "include": ["src"]
+          }
+          EOL
+
+      - name: 🧱 Construir el proyecto
+        run: npm run build
 
       - name: 📤 Subir a S3
         uses: jakejarvis/s3-sync-action@v0.5.1
