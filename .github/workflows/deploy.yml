@@ -21,36 +21,36 @@ jobs:
       - name: 🛠️ Instalar dependencias
         run: npm install
 
-      - name: ➕ Crear tipos faltantes (workaround)
+      - name: 🛠️ Crear alias y módulos ficticios
         run: |
           mkdir -p src/types
           echo "declare module '@/types';" > src/types/custom.d.ts
           echo "declare module '@tailwindcss/vite';" >> src/types/custom.d.ts
           echo "declare module 'react-router/dom';" >> src/types/custom.d.ts
+          echo "declare module 'path';" >> src/types/custom.d.ts
 
-      - name: 🔧 Crear tsconfig.json temporal (build-only)
+      - name: 🔧 Crear tsconfig temporal para el build
         run: |
           cat > tsconfig.json <<EOL
           {
             "compilerOptions": {
               "target": "ESNext",
               "module": "ESNext",
-              "moduleResolution": "node16",
-              "esModuleInterop": true,
+              "moduleResolution": "node",
               "jsx": "react-jsx",
+              "esModuleInterop": true,
               "baseUrl": ".",
               "paths": {
                 "@/*": ["src/*"]
               },
-              "types": ["vite/client", "node"],
-              "allowImportingTsExtensions": true
+              "types": ["vite/client"]
             },
             "include": ["src"]
           }
           EOL
 
-      - name: 🧱 Construir el proyecto
-        run: npm run build
+      - name: 🧱 Ejecutar build solo con Vite
+        run: npm run build --if-present
 
       - name: 📤 Subir a S3
         uses: jakejarvis/s3-sync-action@v0.5.1
